@@ -9,8 +9,8 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# 2. 가장 안정적인 모델 사용
-model = genai.GenerativeModel('gemini-1.5-flash')
+# 2. 안정적인 최신 모델 사용 (gemini-2.0-flash)
+model = genai.GenerativeModel('gemini-2.0-flash')
 
 # 3. 고단가 수익형 블로그 프롬프트
 prompt = """
