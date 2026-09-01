@@ -9,8 +9,8 @@ if not api_key:
 
 genai.configure(api_key=api_key)
 
-# 2. 구형 패키지에서 확실하게 지원되는 모델명으로 변경
-model = genai.GenerativeModel('gemini-1.5-pro')
+# 2. 최신 권장 모델 적용
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 # 3. 고단가 수익형 블로그 프롬프트
 prompt = """
