@@ -19,7 +19,7 @@ def generate_blog_content():
     response = model.generate_content(prompt)
     return response.text
 
-def save_to_file(content):
+def save_and_commit(content):
     os.makedirs("posts", exist_ok=True)
     today = datetime.datetime.now().strftime("%Y-%m-%d-%H%M%S")
     file_path = f"posts/draft-{today}.md"
@@ -27,10 +27,17 @@ def save_to_file(content):
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
     
-    print(f"초안 파일이 성공적으로 저장되었습니다: {file_path}")
+    # 깃허브에 자동 커밋 설정
+    os.system("git config --global user.name 'github-actions[bot]'")
+    os.system("git config --global user.email 'github-actions[bot]@users.noreply.github.com'")
+    os.system(f"git add {file_path}")
+    os.system("git commit -m 'Add new AI blog draft [skip ci]'")
+    os.system("git push")
+    
+    print(f"초안 파일 생성 및 깃허브 푸시 완료: {file_path}")
 
 if __name__ == "__main__":
     print("Gemini 블로그 콘텐츠 생성 시작...")
     content = generate_blog_content()
-    save_to_file(content)
-    print("콘텐츠 생성 및 저장 완료!")
+    save_and_commit(content)
+    print("모든 작업 완료!")
