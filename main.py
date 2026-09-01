@@ -13,7 +13,7 @@ def generate_blog_content():
     블로그에 발행할 매력적이고 트렌디한 IT/테크 관련 주제를 정하고,
     그 주제에 대한 블로그 포스팅 초안을 작성해줘.
     """
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-3.6-flash')
     response = model.generate_content(prompt)
     print(response.text)
 
