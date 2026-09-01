@@ -2,15 +2,14 @@ import os
 from google import genai
 from datetime import datetime
 
-# 1. Gemini API 키 설정
+# 1. API 키 설정 (GitHub Secrets 연동)
 api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GEMINI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
-# 2. 최신 SDK 클라이언트 초기화
 client = genai.Client(api_key=api_key)
 
-# 3. 고단가 수익형 블로그 프롬프트
+# 2. 고단가 수익형(금융·부동산·IT) 블로그 프롬프트
 prompt = """
 당신은 전문 금융, 부동산 및 IT 테크 블로거입니다.
 구글 검색 엔진 최적화(SEO)에 최적화되어 있으며, 독자에게 실질적인 도움이 되고 신뢰성 있는 정보를 담은 블로그 포스팅 초안을 작성해주세요.
@@ -23,7 +22,7 @@ prompt = """
 - 자연스러운 문단과 소제목(##) 위주로 글을 구성하세요.
 - 중간중간 "제가 직접 알아보니까~", "실제로 해보니~" 같은 경험담 느낌의 문장을 자연스럽게 섞어주세요. 딱딱한 정보 나열이 아니라 사람이 직접 조사하고 쓴 것처럼 써주세요.
 - 중요한 부분은 **볼드체**로 강조하고, 필요하면 번호 목록이나 체크리스트, 표를 적절히 활용해 가독성을 높이세요.
-- 뇌피셜이 아닌 객관적이고 유용한 정보 위주로 구성하며, 광고 단가(CPC)가 높고 검색 수요가 꾸준한 내용으로 채워주세요.
+- 뇌피셜이 아닌 객관적이고 유용한 정보 위주로 구성하며, 광고 단가(CPC)가 높고 검색 수요가 꾸준한 내용으로 채우세요.
 - 제목은 검색 유입이 높고 클릭을 유도할 수 있는 키워드 중심으로 작성하세요.
 
 [하지 말아야 할 것]
@@ -32,17 +31,20 @@ prompt = """
 전체 언어는 신뢰감 주는 한국어로 작성해주세요.
 """
 
-# 4. 최신 SDK 방식으로 콘텐츠 생성 요청
-try:
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-    post_content = response.text
-except Exception as e:
-    raise RuntimeError(f"Gemini API 호출 중 오류 발생: {e}")
+# 3. 최신 SDK 방식으로 콘텐츠 생성 요청 (에러 핸들링 포함)
+def generate_blog_post(prompt: str) -> str:
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        return response.text
+    except Exception as e:
+        raise RuntimeError(f"Gemini API 호출 중 오류 발생: {e}")
 
-# 5. posts 폴더 생성 및 마크다운 파일 저장
+post_content = generate_blog_post(prompt)
+
+# 4. posts 폴더 생성 및 마크다운 파일 저장
 os.makedirs("posts", exist_ok=True)
 
 date_str = datetime.now().strftime("%Y-%m-%d-%H%M%S")
