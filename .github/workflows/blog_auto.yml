@@ -2,8 +2,9 @@ name: Auto Blog Generator
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 22 * * *'
+
+permissions:
+  contents: write
 
 jobs:
   run-blog-bot:
@@ -21,8 +22,16 @@ jobs:
         run: |
           pip install google-generativeai
 
-      - name: Run Python script
+      - name: Run main.py
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           python main.py
+
+      - name: Commit and push generated draft
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add posts/
+          git commit -m "Add new blog draft [skip ci]" || exit 0
+          git push
