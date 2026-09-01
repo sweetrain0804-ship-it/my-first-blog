@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 from datetime import datetime
 
 # 1. Gemini API 키 설정
@@ -7,10 +7,8 @@ api_key = os.environ.get("GEMINI_API_KEY")
 if not api_key:
     raise ValueError("GEMINI_API_KEY 환경 변수가 설정되지 않았습니다.")
 
-genai.configure(api_key=api_key)
-
-# 2. 안정적인 최신 모델 사용 (gemini-2.0-flash)
-model = genai.GenerativeModel('gemini-2.0-flash')
+# 2. 최신 클라이언트 및 gemini-2.5-flash 모델 사용 (이 조합이 가장 확실합니다)
+client = genai.Client(api_key=api_key)
 
 # 3. 고단가 수익형 블로그 프롬프트
 prompt = """
@@ -36,7 +34,10 @@ prompt = """
 
 # 4. Gemini에 요청하여 블로그 글 생성
 try:
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
     post_content = response.text
 except Exception as e:
     raise RuntimeError(f"Gemini API 호출 중 오류 발생: {e}")
