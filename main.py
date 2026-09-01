@@ -11,7 +11,7 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 # 3. 사용할 Gemini 모델 선택 (최신 1.5 Flash 모델 활용)
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel ("gemini-2.5-flash")
 
 
 def generate_blog_content():
