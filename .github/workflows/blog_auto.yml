@@ -1,4 +1,5 @@
-Name: Auto Blog Generator
+name: Auto Blog Generator
+
 
 on:
   workflow_dispatch:
