@@ -6,7 +6,8 @@ from moviepy.editor import AudioFileClip, ColorClip, CompositeVideoClip
 # 1. Gemini API를 이용해 쇼츠 대본 생성 (안정적인 모델명 사용)
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 response = client.models.generate_content(
-    model="gemini-2.5-flash",
+        model="gemini-3.6-flash",
+
     contents="유튜브 쇼츠용 30초 대본을 한 줄씩 3~4문장으로 짧고 강렬하게 작성해줘. 주제: 2026년 청년들이 꼭 알아야 할 돈 모으기 꿀팁. 다른 부가 설명 없이 대본 텍스트만 출력해줘.",
 )
 
