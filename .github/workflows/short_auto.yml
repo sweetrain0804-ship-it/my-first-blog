@@ -1,0 +1,39 @@
+name: Auto Generate YouTube Short
+
+on:
+  workflow_dispatch: # 수동 실행 버튼
+
+jobs:
+  build-short:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install system dependencies (ImageMagick for MoviePy)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+          sudo sed -i 's/none/read,write/g' /etc/ImageMagick-6/policy.xml || true
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Short Generation Script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python make_short.py
+
+      - name: Upload Generated Short Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-short-video
+          path: output_short.mp4
