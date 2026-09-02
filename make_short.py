@@ -28,27 +28,26 @@ bg_clip = ColorClip(size=(1080, 1920), color=(15, 23, 42), duration=duration)
 # 4. 자막 텍스트 클립 추가 (한글 폰트 지정 및 자동 줄바꿈 적용)
 try:
     txt_clip = TextClip(
-        script_text, 
-        fontsize=60, 
-        color='white', 
+        script_text,
+        fontsize=60,
+        color='white',
         font='/usr/share/fonts/truetype/nanum/NanumGothic.ttf',
-        size=(900, None), 
+        size=(900, None),
         method='caption'
     ).set_duration(duration).set_position('center')
-    
+
     video = CompositeVideoClip([bg_clip, txt_clip]).set_audio(audio_clip)
 except Exception as e:
-    print(f"❌ 자막 생성 실패 이유: {repr(e)}")
+    print(f"자막 생성 실패 이유: {repr(e)}")
     video = bg_clip.set_audio(audio_clip)
 
 # 5. 최종 MP4 영상 파일로 저장
 output_video_path = "output_short.mp4"
 video.write_videofile(
-    output_video_path, 
-    fps=24, 
-    codec='libx264', 
-    audio_codec='aac',
-    logger=None
+    output_video_path,
+    fps=24,
+    codec='libx264',
+    audio_codec='aac'
 )
 
 print(f"쇼츠 영상 및 자막 생성 완료: {output_video_path}")
