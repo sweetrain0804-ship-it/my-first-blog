@@ -10,7 +10,8 @@ if not api_key:
 genai.configure(api_key=api_key)
 
 # 2. 에러 메시지가 지시한 최신 모델로 적용
-model = genai.GenerativeModel('gemini-1.5-flash')
+model = genai.GenerativeModel('gemini-2.5-flash')
+
 
 
 # 3. 고단가 수익형 블로그 프롬프트
