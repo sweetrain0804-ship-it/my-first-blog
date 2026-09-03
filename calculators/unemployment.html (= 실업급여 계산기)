@@ -1,0 +1,92 @@
+<!-- 2026년 실업급여(구직급여) 간이 계산기 시작 -->
+<div style="max-width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 18px; font-family: sans-serif; background: #fafafa;">
+  <h3 style="text-align: center; color: #1a3d7c; margin-top: 0;">2026년 실업급여(구직급여) 계산기</h3>
+  <p style="font-size: 13px; color: #666; text-align: center; margin-top: -5px;">퇴직 전 급여, 나이, 가입기간을 입력하면 예상 수급액을 확인할 수 있어요</p>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">퇴직 전 3개월 총 급여 (세전, 원)</label>
+    <input type="number" id="threeMonthPay" placeholder="예: 9000000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">나이</label>
+    <select id="ageGroup" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+      <option value="under50">50세 미만</option>
+      <option value="over50">50세 이상 (또는 장애인)</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">고용보험 가입기간</label>
+    <select id="insurePeriod" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+      <option value="1">1년 미만</option>
+      <option value="3">1년 이상 ~ 3년 미만</option>
+      <option value="5">3년 이상 ~ 5년 미만</option>
+      <option value="10">5년 이상 ~ 10년 미만</option>
+      <option value="99">10년 이상</option>
+    </select>
+  </div>
+
+  <button onclick="calcUnemployment()" style="width: 100%; padding: 12px; background: #1a3d7c; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer;">실업급여 계산하기</button>
+
+  <div id="resultBox" style="display: none; margin-top: 15px; padding: 12px; background: #eef2fb; border-radius: 8px;">
+    <p id="resDaily" style="margin: 5px 0; font-size: 14px;"></p>
+    <p id="resDays" style="margin: 5px 0; font-size: 14px;"></p>
+    <p id="resTotal" style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #1a3d7c;"></p>
+  </div>
+
+  <!-- 하단 면책 설명문 -->
+  <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #ddd;">
+    <p style="margin: 0 0 5px 0; font-size: 12px; color: #999;">
+      · 본 계산기는 2026년 기준 1일 상한액(68,100원)·하한액(66,048원)과 소정급여일수표를 적용한 간이 추정치입니다.<br>
+      · 실제 수급액은 이직 사유, 근로시간, 반복수급 감액 등에 따라 달라질 수 있습니다.<br>
+      · 정확한 금액과 수급 자격은 고용보험 홈페이지(work24.go.kr) 또는 관할 고용센터를 통해 확인하시기 바랍니다.
+    </p>
+  </div>
+</div>
+
+<script>
+function calcUnemployment() {
+  var threeMonthPay = Number(document.getElementById('threeMonthPay').value) || 0;
+  var ageGroup = document.getElementById('ageGroup').value;
+  var insurePeriod = document.getElementById('insurePeriod').value;
+
+  if (threeMonthPay <= 0) {
+    alert('퇴직 전 3개월 총 급여를 입력해주세요.');
+    return;
+  }
+
+  var periodDays = 91;
+  var avgWage = threeMonthPay / periodDays;
+  var dailyBenefit = avgWage * 0.6;
+
+  var upperLimit = 68100;
+  var lowerLimit = 66048;
+
+  if (dailyBenefit > upperLimit) dailyBenefit = upperLimit;
+  if (dailyBenefit < lowerLimit) dailyBenefit = lowerLimit;
+
+  var days = 0;
+  if (ageGroup === 'under50') {
+    if (insurePeriod === '1') days = 120;
+    else if (insurePeriod === '3') days = 150;
+    else if (insurePeriod === '5') days = 180;
+    else if (insurePeriod === '10') days = 210;
+    else days = 240;
+  } else {
+    if (insurePeriod === '1') days = 120;
+    else if (insurePeriod === '3') days = 180;
+    else if (insurePeriod === '5') days = 210;
+    else if (insurePeriod === '10') days = 240;
+    else days = 270;
+  }
+
+  var total = Math.round(dailyBenefit) * days;
+
+  document.getElementById('resDaily').innerText = '1일 구직급여액: ' + Math.round(dailyBenefit).toLocaleString() + '원';
+  document.getElementById('resDays').innerText = '소정급여일수: ' + days + '일';
+  document.getElementById('resTotal').innerText = '예상 총 수급액: ' + total.toLocaleString() + '원';
+  document.getElementById('resultBox').style.display = 'block';
+}
+</script>
+<!-- 2026년 실업급여(구직급여) 간이 계산기 끝 -->
