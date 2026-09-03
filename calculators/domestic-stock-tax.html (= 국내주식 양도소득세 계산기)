@@ -1,0 +1,99 @@
+<!-- 국내주식(대주주) 양도소득세 간이 계산기 시작 -->
+<div style="max-width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 18px; font-family: sans-serif; background: #fafafa;">
+  <h3 style="text-align: center; color: #1a3d7c; margin-top: 0;">국내주식 양도소득세 간이 계산기</h3>
+  <p style="font-size: 13px; color: #666; text-align: center; margin-top: -5px;">대주주 요건에 해당하는 경우에만 세금이 발생해요. 먼저 대주주 여부부터 확인해보세요</p>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">시장 구분</label>
+    <select id="market" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+      <option value="kospi">코스피</option>
+      <option value="kosdaq">코스닥</option>
+      <option value="konex">코넥스</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">해당 종목 지분율 (%)</label>
+    <input type="number" id="stakeRatio" placeholder="예: 0.5" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">해당 종목 연말 기준 보유금액 (원)</label>
+    <input type="number" id="holdingValue" placeholder="예: 300000000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">매도 금액 (원)</label>
+    <input type="number" id="sellPrice" placeholder="예: 500000000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">매수 금액 (원)</label>
+    <input type="number" id="buyPrice" placeholder="예: 300000000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">필요경비 (수수료 등, 원)</label>
+    <input type="number" id="expense" placeholder="예: 500000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <button onclick="calcDomesticTax()" style="width: 100%; padding: 12px; background: #1a3d7c; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer;">대주주 여부·세금 계산하기</button>
+
+  <div id="resultBox" style="display: none; margin-top: 15px; padding: 12px; background: #eef2fb; border-radius: 8px;">
+    <p id="resStatus" style="margin: 5px 0; font-size: 14px; font-weight: bold;"></p>
+    <p id="resProfit" style="margin: 5px 0; font-size: 14px;"></p>
+    <p id="resTax" style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #1a3d7c;"></p>
+  </div>
+
+  <!-- 하단 면책 설명문 -->
+  <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #ddd;">
+    <p style="margin: 0 0 5px 0; font-size: 12px; color: #999;">
+      · 대주주 판정 기준: 지분율(코스피 1%·코스닥 2%·코넥스 4% 이상) 또는 종목당 보유금액 50억 원 이상 중 하나만 충족해도 대주주로 분류됩니다.<br>
+      · 세율은 대주주 기준 과세표준 3억 원 이하 22%, 3억 원 초과분 27.5%(지방소득세 포함)를 적용한 간이 추정치이며, 1년 미만 보유 등 예외 세율은 반영되지 않았습니다.<br>
+      · 소액주주(대주주 요건 미해당)의 장내 거래는 원칙적으로 양도소득세가 없습니다.<br>
+      · 정확한 대주주 판정과 세액은 국세청 홈택스 또는 세무 전문가와 상담하시기 바랍니다.
+    </p>
+  </div>
+</div>
+
+<script>
+function calcDomesticTax() {
+  var market = document.getElementById('market').value;
+  var stakeRatio = Number(document.getElementById('stakeRatio').value) || 0;
+  var holdingValue = Number(document.getElementById('holdingValue').value) || 0;
+  var sell = Number(document.getElementById('sellPrice').value) || 0;
+  var buy = Number(document.getElementById('buyPrice').value) || 0;
+  var exp = Number(document.getElementById('expense').value) || 0;
+
+  var stakeLimit = 1;
+  if (market === 'kosdaq') stakeLimit = 2;
+  if (market === 'konex') stakeLimit = 4;
+
+  var isMajor = (stakeRatio >= stakeLimit) || (holdingValue >= 5000000000);
+
+  if (!isMajor) {
+    document.getElementById('resStatus').innerText = '판정 결과: 소액주주 (대주주 요건 미해당)';
+    document.getElementById('resProfit').innerText = '장내 거래 시 원칙적으로 양도소득세가 부과되지 않습니다.';
+    document.getElementById('resTax').innerText = '예상 세액: 0원';
+    document.getElementById('resultBox').style.display = 'block';
+    return;
+  }
+
+  var profit = sell - buy - exp;
+  if (profit < 0) profit = 0;
+
+  var limit = 300000000;
+  var tax = 0;
+  if (profit <= limit) {
+    tax = profit * 0.22;
+  } else {
+    tax = limit * 0.22 + (profit - limit) * 0.275;
+  }
+
+  document.getElementById('resStatus').innerText = '판정 결과: 대주주 (양도소득세 과세 대상)';
+  document.getElementById('resProfit').innerText = '양도차익: ' + profit.toLocaleString() + '원';
+  document.getElementById('resTax').innerText = '예상 납부세액: ' + Math.round(tax).toLocaleString() + '원';
+  document.getElementById('resultBox').style.display = 'block';
+}
+</script>
+<!-- 국내주식(대주주) 양도소득세 간이 계산기 끝 -->
