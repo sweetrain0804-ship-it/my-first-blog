@@ -3,6 +3,10 @@ name: Auto Blog Generator
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '0 23 * * *'
+
+  
 
 permissions:
   contents: write
