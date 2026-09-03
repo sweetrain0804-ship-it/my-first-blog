@@ -1,0 +1,89 @@
+<!-- 2026년 근로장려금 간이 계산기 시작 -->
+<div style="max-width: 100%; border: 1px solid #ddd; border-radius: 10px; padding: 18px; font-family: sans-serif; background: #fafafa;">
+  <h3 style="text-align: center; color: #1a3d7c; margin-top: 0;">2026년 근로장려금 예상액 계산기</h3>
+  <p style="font-size: 13px; color: #666; text-align: center; margin-top: -5px;">가구 유형과 연간 총소득을 입력하면 예상 지급액을 확인할 수 있어요</p>
+
+  <div style="margin-bottom: 12px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">가구 유형</label>
+    <select id="houseType" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+      <option value="single">단독가구</option>
+      <option value="single-earner">홑벌이가구</option>
+      <option value="double-earner">맞벌이가구</option>
+    </select>
+  </div>
+
+  <div style="margin-bottom: 15px;">
+    <label style="display: block; font-size: 14px; margin-bottom: 4px;">연간 총소득 (원)</label>
+    <input type="number" id="totalIncome" placeholder="예: 15000000" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 6px;">
+  </div>
+
+  <button onclick="calcEitc()" style="width: 100%; padding: 12px; background: #1a3d7c; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer;">예상 지급액 계산하기</button>
+
+  <div id="resultBox" style="display: none; margin-top: 15px; padding: 12px; background: #eef2fb; border-radius: 8px;">
+    <p id="resAmount" style="margin: 5px 0; font-size: 16px; font-weight: bold; color: #1a3d7c;"></p>
+  </div>
+
+  <!-- 하단 면책 설명문 -->
+  <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #ddd;">
+    <p style="margin: 0 0 5px 0; font-size: 12px; color: #999;">
+      · 본 계산기는 가구 유형별 소득구간(점증·평탄·점감구간)만 적용한 간이 추정치이며, 재산 요건(2억 4천만 원 미만)은 반영되지 않았습니다.<br>
+      · 재산 요건을 충족하지 못하면 소득이 기준 이내여도 지급되지 않거나 감액될 수 있습니다.<br>
+      · 정확한 지급액과 신청 자격은 국세청 홈택스 또는 손택스에서 확인하시기 바랍니다.
+    </p>
+  </div>
+</div>
+
+<script>
+function calcEitc() {
+  var type = document.getElementById('houseType').value;
+  var income = Number(document.getElementById('totalIncome').value) || 0;
+
+  if (income <= 0) {
+    alert('연간 총소득을 입력해주세요.');
+    return;
+  }
+
+  var amount = 0;
+
+  if (type === 'single') {
+    var max = 1650000;
+    if (income < 4000000) {
+      amount = income * max / 4000000;
+    } else if (income <= 9000000) {
+      amount = max;
+    } else if (income <= 22000000) {
+      amount = max - (income - 9000000) * max / 13000000;
+    } else {
+      amount = 0;
+    }
+  } else if (type === 'single-earner') {
+    var max = 2850000;
+    if (income < 7000000) {
+      amount = income * max / 7000000;
+    } else if (income <= 14000000) {
+      amount = max;
+    } else if (income <= 32000000) {
+      amount = max - (income - 14000000) * max / 18000000;
+    } else {
+      amount = 0;
+    }
+  } else {
+    var max = 3300000;
+    if (income < 8000000) {
+      amount = income * max / 8000000;
+    } else if (income <= 17000000) {
+      amount = max;
+    } else if (income <= 38000000) {
+      amount = max - (income - 17000000) * max / 21000000;
+    } else {
+      amount = 0;
+    }
+  }
+
+  if (amount < 0) amount = 0;
+
+  document.getElementById('resAmount').innerText = '예상 근로장려금: ' + Math.round(amount).toLocaleString() + '원';
+  document.getElementById('resultBox').style.display = 'block';
+}
+</script>
+<!-- 2026년 근로장려금 간이 계산기 끝 -->
