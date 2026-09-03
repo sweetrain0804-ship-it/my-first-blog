@@ -1,13 +1,9 @@
-name: Auto Blog Generator
-
+Name: Auto Blog Generator
 
 on:
   workflow_dispatch:
   schedule:
-    -     - cron: '0 */4 * * *'
-
-
-  
+    - cron: '0 */4 * * *'
 
 permissions:
   contents: write
@@ -19,7 +15,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # 이 부분이 핵심입니다! 기존 커밋 기록을 모두 안전하게 가져옵니다.
+          fetch-depth: 0
 
       - name: Configure Git Identity
         run: |
