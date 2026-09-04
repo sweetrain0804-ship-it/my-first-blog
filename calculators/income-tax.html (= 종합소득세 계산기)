@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>종합소득세 계산기</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF8F2;
+  --ink:#1B2A41;
+  --ink-soft:#4B5768;
+  --line:#D9D2C2;
+  --stamp:#B23A2E;
+  --stamp-soft:#F3E3E0;
+  --accent:#1B6B5C;
+  --accent-soft:#E1EEEA;
+  --paper-card:#FFFFFF;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,sans-serif;
+  line-height:1.55;
+  padding:32px 16px 64px;
+}
+.wrap{max-width:520px;margin:0 auto;}
+.doc-head{
+  border-bottom:3px double var(--ink);
+  padding-bottom:16px;
+  margin-bottom:24px;
+}
+.doc-no{
+  font-size:12px;
+  letter-spacing:.04em;
+  color:var(--ink-soft);
+  margin:0 0 6px;
+}
+.doc-title{
+  font-family:'Noto Serif KR',serif;
+  font-size:26px;
+  font-weight:700;
+  margin:0 0 8px;
+}
+.doc-sub{
+  font-size:14px;
+  color:var(--ink-soft);
+  margin:0;
+}
+.card{
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:20px;
+  margin-bottom:18px;
+}
+.field{margin-bottom:16px;}
+.field:last-child{margin-bottom:0;}
+label{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--ink);
+  margin-bottom:6px;
+}
+.hint{
+  font-size:12px;
+  color:var(--ink-soft);
+  margin-top:4px;
+}
+input[type=number], input[type=text], select{
+  width:100%;
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:3px;
+  font-size:15px;
+  font-family:inherit;
+  background:#fff;
+  color:var(--ink);
+}
+input:focus, select:focus{
+  outline:2px solid var(--accent);
+  outline-offset:1px;
+}
+.radio-row{display:flex;gap:10px;flex-wrap:wrap;}
+.radio-row label{
+  display:flex;align-items:center;gap:6px;
+  font-weight:500;font-size:14px;
+  border:1px solid var(--line);
+  padding:8px 12px;border-radius:20px;
+  cursor:pointer;margin-bottom:0;
+}
+.radio-row input{width:auto;}
+.check-row{display:flex;align-items:center;gap:8px;}
+.check-row label{margin:0;font-weight:500;}
+.check-row input{width:auto;}
+button.calc{
+  width:100%;
+  background:var(--stamp);
+  color:#fff;
+  border:none;
+  padding:14px;
+  font-size:16px;
+  font-weight:700;
+  border-radius:3px;
+  cursor:pointer;
+  letter-spacing:.02em;
+}
+button.calc:hover{filter:brightness(0.92);}
+.result{
+  display:none;
+  background:var(--paper-card);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:20px;
+}
+.result.show{display:block;}
+.result h2{
+  font-family:'Noto Serif KR',serif;
+  font-size:16px;
+  margin:0 0 14px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--line);
+}
+.row{
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+  padding:6px 0;
+  color:var(--ink-soft);
+}
+.row.total{
+  border-top:2px solid var(--ink);
+  margin-top:8px;
+  padding-top:12px;
+  font-size:18px;
+  font-weight:700;
+  color:var(--stamp);
+}
+.row.total .num{font-family:'Pretendard',monospace;}
+.badge{
+  display:inline-block;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-size:12px;
+  font-weight:700;
+  padding:3px 9px;
+  border-radius:20px;
+  margin-bottom:10px;
+}
+.note{
+  font-size:12px;
+  color:var(--ink-soft);
+  background:var(--stamp-soft);
+  border-left:3px solid var(--stamp);
+  padding:10px 12px;
+  margin-top:20px;
+  border-radius:2px;
+}
+footer{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-soft);
+  margin-top:28px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="doc-head">
+    <p class="doc-no">TAX CALC · 01 — 종합소득세</p>
+    <h1 class="doc-title">종합소득세 계산기</h1>
+    <p class="doc-sub">과세표준만 입력하면 8단계 누진세율로 예상 세액을 계산합니다.</p>
+  </div>
+  
+<div class="card">
+  <div class="field">
+    <label for="base">연간 과세표준 (만 원)</label>
+    <input type="number" id="base" placeholder="예: 4000" min="0">
+    <p class="hint">과세표준 = 종합소득금액 − 소득공제(인적공제·연금보험료공제 등). 총급여가 아닌, 각종 공제를 이미 뺀 금액을 입력하세요.</p>
+  </div>
+</div>
+<button class="calc" onclick="calc()">세액 계산하기</button>
+<div class="result" id="result">
+  <span class="badge">2023~2025년 귀속 기준 (8단계 누진세율)</span>
+  <h2>예상 종합소득세 산출 내역</h2>
+  <div class="row"><span>적용 구간</span><span class="num" id="bracket"></span></div>
+  <div class="row"><span>산출세액 (과세표준 × 세율 − 누진공제)</span><span class="num" id="calcTax"></span></div>
+  <div class="row"><span>지방소득세 (산출세액의 10%)</span><span class="num" id="localTax"></span></div>
+  <div class="row total"><span>총 납부세액(예상)</span><span class="num" id="totalTax"></span></div>
+</div>
+
+  <div class="note">프리랜서·개인사업자·임대소득자 등 종합소득세 신고 대상자를 위한 산출세액 추정 도구입니다. 세액공제(자녀세액공제, 기부금세액공제 등)는 반영되지 않았으니 실제 납부세액은 이보다 낮아질 수 있습니다.</div>
+  <footer>본 계산기는 참고용 추정치이며 법적 효력이 없습니다. 정확한 세액은 홈택스·위택스 모의계산 또는 세무사 상담을 통해 확인하세요.</footer>
+</div>
+<script>
+const BRACKETS = [
+  {limit: 1400, rate: 0.06, deduction: 0, label: '1,400만원 이하 · 6%'},
+  {limit: 5000, rate: 0.15, deduction: 126, label: '1,400만~5,000만원 · 15%'},
+  {limit: 8800, rate: 0.24, deduction: 576, label: '5,000만~8,800만원 · 24%'},
+  {limit: 15000, rate: 0.35, deduction: 1544, label: '8,800만~1억5,000만원 · 35%'},
+  {limit: 30000, rate: 0.38, deduction: 1994, label: '1억5,000만~3억원 · 38%'},
+  {limit: 50000, rate: 0.40, deduction: 2594, label: '3억~5억원 · 40%'},
+  {limit: 100000, rate: 0.42, deduction: 3594, label: '5억~10억원 · 42%'},
+  {limit: Infinity, rate: 0.45, deduction: 6594, label: '10억원 초과 · 45%'}
+];
+function fmt(n){ return Math.round(n).toLocaleString('ko-KR') + '만원'; }
+function calc(){
+  const base = parseFloat(document.getElementById('base').value);
+  if(!base || base <= 0){ alert('과세표준을 입력해주세요.'); return; }
+  const b = BRACKETS.find(x => base <= x.limit);
+  const calcTax = Math.max(0, base * b.rate - b.deduction);
+  const localTax = calcTax * 0.1;
+  document.getElementById('bracket').textContent = b.label;
+  document.getElementById('calcTax').textContent = fmt(calcTax);
+  document.getElementById('localTax').textContent = fmt(localTax);
+  document.getElementById('totalTax').textContent = fmt(calcTax + localTax);
+  document.getElementById('result').classList.add('show');
+}
+</script>
+</body>
+</html>
