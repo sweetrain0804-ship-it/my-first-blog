@@ -8,12 +8,12 @@
 </head>
 <body class="bg-slate-100 min-h-screen py-6 px-4">
     <div class="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6">
-        <h1 class="text-xl font-bold text-slate-800 mb-4 text-center">💰 간편 연봉 실수령액 계산기</h1>
+        <h1 class="text-xl font-bold text-slate-800 mb-4 text-center">💰 간편 연봉 실수령액 계산기 (2026)</h1>
         
         <div class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">연봉 (원)</label>
-                <input type="number" id="salary" placeholder="예: 40000000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
+                <label class="block text-sm font-medium text-slate-700 mb-1">연봉 (원 또는 만원 단위 입력 가능)</label>
+                <input type="number" id="salary" placeholder="예: 4800 또는 48000000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-right">
             </div>
 
             <div>
@@ -37,18 +37,18 @@
         </div>
 
         <div id="result" class="mt-6 border-t border-slate-200 pt-4 hidden">
-            <h2 class="text-md font-semibold text-slate-800 mb-3">결과 요약</h2>
+            <h2 class="text-md font-semibold text-slate-800 mb-3">결과 요약 (2026 기준)</h2>
             <div class="space-y-2 text-sm">
                 <div class="flex justify-between">
-                    <span class="text-slate-600">월 환급액 (총급여)</span>
+                    <span class="text-slate-600">월 총급여 (세전)</span>
                     <span id="resMonthlyGross" class="font-medium text-slate-900">0원</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-600">국민연금 (4.5%)</span>
+                    <span class="text-slate-600">국민연금 (4.75%)</span>
                     <span id="resNationalPension" class="font-medium text-red-500">-0원</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-slate-600">건강보험 (3.545%)</span>
+                    <span class="text-slate-600">건강보험 (3.595%)</span>
                     <span id="resHealthInsurance" class="font-medium text-red-500">-0원</span>
                 </div>
                 <div class="flex justify-between">
@@ -85,26 +85,32 @@
                 return;
             }
 
-            const annualSalary = parseFloat(salaryInput);
-            const monthlyTaxFree = parseFloat(taxFreeInput) || 0;
+            let annualSalary = parseFloat(salaryInput);
             
+            // 사용자가 만원 단위(예: 4800)로 입력했을 경우 원 단위(48,000,000)로 자동 보정
+            if (annualSalary < 1000000) {
+                annualSalary = annualSalary * 10000;
+            }
+
+            const monthlyTaxFree = parseFloat(taxFreeInput) || 0;
             const monthlyGross = annualSalary / 12;
             const taxableIncome = Math.max(0, monthlyGross - monthlyTaxFree);
 
-            // 4대 보험 계산 (간이 요율 적용)
-            // 국민연금 (상한액 고려 생략, 기본 4.5%)
-            const nationalPension = Math.min(Math.floor(taxableIncome * 0.045 / 10) * 10, 265500);
+            // 2026년 기준 4대 보험 계산 (근로자 부담분 요율 적용)
+            // 1. 국민연금 (4.75%, 기준소득월액 상한 659만원 고려)
+            const cappedPensionIncome = Math.min(taxableIncome, 6590000);
+            const nationalPension = Math.floor(cappedPensionIncome * 0.0475 / 10) * 10;
             
-            // 건강보험 (3.545%)
-            const healthInsurance = Math.floor(taxableIncome * 0.03545 / 10) * 10;
+            // 2. 건강보험 (3.595% - 2026년 전체 7.19%의 절반)
+            const healthInsurance = Math.floor(taxableIncome * 0.03595 / 10) * 10;
             
-            // 장기요양보험 (건강보험료의 12.95%)
-            const longTermCare = Math.floor(healthInsurance * 0.1295 / 10) * 10;
+            // 3. 장기요양보험 (건강보험료의 13.14%)
+            const longTermCare = Math.floor(healthInsurance * 0.1314 / 10) * 10;
             
-            // 고용보험 (0.9%)
+            // 4. 고용보험 (0.9%)
             const employmentInsurance = Math.floor(taxableIncome * 0.009 / 10) * 10;
 
-            // 간이 소득세 추정 (매우 단순화된 근사치 로직)
+            // 간이 소득세 추정
             let estimatedTax = taxableIncome * 0.03; 
             if (annualSalary > 50000000) estimatedTax = taxableIncome * 0.05;
             if (annualSalary > 80000000) estimatedTax = taxableIncome * 0.08;
