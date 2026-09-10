@@ -1,17 +1,98 @@
-strong><br><br>' +
+<!-- 국내주식 대주주 양도소득세 예상 계산기 START -->
+<div style="max-width:480px;margin:0 auto;font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
+
+  <div style="background:#1a237e;color:#fff;padding:18px;border-radius:10px 10px 0 0;text-align:center;">
+    <strong style="font-size:18px;">📈 국내주식 대주주 양도소득세 계산기</strong>
+  </div>
+
+  <div style="background:#f5f5f7;padding:18px;border-radius:0 0 10px 10px;">
+
+    <label style="display:block;margin-bottom:6px;font-weight:bold;">양도가액 (판 금액)</label>
+    <input type="text" id="transferAmount" placeholder="예: 50,000,000" inputmode="numeric"
+      style="width:100%;box-sizing:border-box;padding:10px;margin-bottom:14px;border:1px solid #ccc;border-radius:6px;font-size:16px;">
+
+    <label style="display:block;margin-bottom:6px;font-weight:bold;">취득가액 (살 때 낸 금액)</label>
+    <input type="text" id="acquisitionAmount" placeholder="예: 30,000,000" inputmode="numeric"
+      style="width:100%;box-sizing:border-box;padding:10px;margin-bottom:14px;border:1px solid #ccc;border-radius:6px;font-size:16px;">
+
+    <label style="display:block;margin-bottom:6px;font-weight:bold;">필요경비 (수수료 등)</label>
+    <input type="text" id="necessaryExpense" placeholder="예: 100,000" inputmode="numeric"
+      style="width:100%;box-sizing:border-box;padding:10px;margin-bottom:16px;border:1px solid #ccc;border-radius:6px;font-size:16px;">
+
+    <button onclick="calculateStockTax()"
+      style="width:100%;padding:13px;background:#1a237e;color:#fff;border:none;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;">
+      계산하기
+    </button>
+
+    <div id="stockTaxResult" style="display:none;margin-top:16px;"></div>
+
+    <p style="font-size:12px;color:#777;margin-top:14px;line-height:1.5;">
+      ※ 대주주 요건에 해당하는 경우를 기준으로 한 예상 세액입니다. 실제 신고 시에는 세무사 또는 국세청 홈택스를 통해 정확한 금액을 다시 확인하세요.<br>
+      ※ 기본공제 250만 원, 세율은 과세표준 3억 원 이하 22%(지방소득세 포함), 3억 원 초과분 27.5%(지방소득세 포함) 기준입니다.
+    </p>
+
+  </div>
+</div>
+
+<script>
+function stockMoney(num) {
+  return Math.round(num).toLocaleString('ko-KR') + '원';
+}
+
+function parseNum(id) {
+  var raw = document.getElementById(id).value.replace(/,/g, '').trim();
+  var num = parseFloat(raw);
+  return isNaN(num) ? 0 : num;
+}
+
+function calculateStockTax() {
+  var transferAmount = parseNum('transferAmount');
+  var acquisitionAmount = parseNum('acquisitionAmount');
+  var necessaryExpense = parseNum('necessaryExpense');
+
+  var resultText = '';
+
+  if (transferAmount <= 0) {
+    resultText = '<div style="padding:13px;background:#fff3f3;border-radius:8px;color:#d32f2f;">양도가액을 입력해주세요.</div>';
+  } else {
+
+    // 1. 양도차익 계산
+    var gain = transferAmount - acquisitionAmount - necessaryExpense;
+    if (gain < 0) gain = 0;
+
+    // 2. 기본공제 (연 250만원)
+    var basicDeduction = 2500000;
+    var taxBase = gain - basicDeduction;
+    if (taxBase < 0) taxBase = 0;
+
+    // 3. 구간별 세율 적용 (지방소득세 포함)
+    // 3억원 이하: 22%, 3억원 초과분: 27.5%
+    var threshold = 300000000;
+    var totalTax = 0;
+
+    if (taxBase <= threshold) {
+      totalTax = taxBase * 0.22;
+    } else {
+      totalTax = threshold * 0.22 + (taxBase - threshold) * 0.275;
+    }
+
+    resultText =
+      '<div style="padding:13px;background:#fff;border-radius:8px;margin-bottom:8px;line-height:1.9;">' +
+      '양도차익: <strong>' + stockMoney(gain) + '</strong><br>' +
+      '기본공제: <strong>' + stockMoney(basicDeduction) + '</strong><br>' +
+      '과세표준: <strong>' + stockMoney(taxBase) + '</strong><br><br>' +
+      '</div>' +
 
       '<div style="padding:13px;background:#fff;border-radius:8px;">' +
-      '💰 <strong>예상 납부세액</strong><br>' +
+      '💰 <strong>예상 납부세액 (지방소득세 포함)</strong><br>' +
       '<span style="font-size:23px;color:#d32f2f;font-weight:bold;">' +
       stockMoney(totalTax) +
       '</span>' +
       '</div>';
-
   }
 
   document.getElementById('stockTaxResult').style.display = 'block';
   document.getElementById('stockTaxResult').innerHTML = resultText;
 }
 </script>
-
 <!-- 국내주식 대주주 양도소득세 예상 계산기 END -->
