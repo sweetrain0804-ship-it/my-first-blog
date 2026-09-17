@@ -60,7 +60,7 @@ async function getRecipe() {
     return;
   }
 
-  const prompt = `냉장고에 다음 재료가 있습니다: ${ingredients}. 기준 인원은 ${servings}입니다. 이 재료들을 활용해서 만들 수 있는 맛있는 요리 레시피 1~2가지를 추천해주세요. 요리 이름, 필요한 추가 양념(간장, 소금 등 기본적인 것 제외하고 최소화), 상세 조리 순서를 보기 쉽게 정리해주세요.`;
+  const prompt = `냉장고에 다음 재료가 있습니다: ${ingredients}. 기준 인원은 ${servings}입니다. 이 재료들을 활용해서 만들 수 있는 맛있는 요리 레시피 1~2가지를 추천해주세요. 요리 이름, 필요한 추가 양념, 상세 조리 순서를 보기 쉽게 정리해주세요.`;
 
   askBtn.disabled = true;
   loading.style.display = 'block';
