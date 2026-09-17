@@ -1,62 +1,51 @@
-<!--
-  냉장고 파먹기 레시피 추천 툴
-  -----------------------------------
-  1. 아래 PROXY_URL 자리에, Gemini API 키를 숨겨줄 프록시(서버리스 함수) 주소를 넣으세요.
-     (Cloudflare Workers, Vercel Functions 등 무료 티어로 충분합니다)
-  2. 절대 이 파일에 Gemini API 키를 직접 넣지 마세요. 방문자가 브라우저 개발자도구로 볼 수 있습니다.
-  3. GitHub my-first-blog 저장소의 tools 폴더(또는 원하는 폴더)에 이 파일을 올리고
-     GitHub Pages 주소로 iframe 임베드하거나, 이 파일 자체를 워드프레스 커스텀 HTML 블록에 넣으세요.
--->
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>냉장고 재료로 레시피 추천받기</title>
-</head>
-<body style="margin:0;">
+  if (!ingredients) {
+    alert("냉장고에 있는 재료를 입력해주세요.");
+    return;
+  }
 
-<div style="max-width: 480px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 20px; font-family: sans-serif; background: #fffaf5;">
-  <h3 style="text-align: center; color: #b5541e; margin-top: 0;">🥘 냉장고 파먹기 레시피 추천</h3>
-  <p style="font-size: 13px; color: #777; text-align: center; margin-top: -5px;">
-    남은 재료를 쉼표로 입력하면 AI가 만들 수 있는 요리를 추천해드려요
-  </p>
+  const servings = document.getElementById('servings').value;
+  const btn = document.getElementById('askBtn');
+  const loading = document.getElementById('loading');
+  const resultBox = document.getElementById('resultBox');
 
-  <div style="margin-bottom: 12px;">
-    <label style="display:block; font-size: 14px; margin-bottom: 4px;">가진 재료 (쉼표로 구분)</label>
-    <input type="text" id="ingredients" placeholder="예: 돼지고기, 김치, 두부"
-      style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-  </div>
+  btn.disabled = true;
+  loading.style.display = "block";
+  resultBox.style.display = "none";
+  resultBox.textContent = "";
 
-  <div style="margin-bottom: 15px;">
-    <label style="display:block; font-size: 14px; margin-bottom: 4px;">몇 인분 기준으로 알려드릴까요?</label>
-    <select id="servings" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-      <option value="1인분">1인분</option>
-      <option value="2인분" selected>2인분</option>
-      <option value="3~4인분">3~4인분</option>
-    </select>
-  </div>
+  try {
+    const response = await fetch(PROXY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        ingredients: ingredients,
+        servings: servings
+      })
+    });
 
-  <button onclick="getRecipe()" id="askBtn"
-    style="width: 100%; padding: 13px; background: #b5541e; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer;">
-    레시피 추천받기
-  </button>
+    const data = await response.json();
 
-  <div id="loading" style="display:none; text-align:center; margin-top: 15px; font-size: 14px; color: #999;">
-    재료를 살펴보는 중이에요...
-  </div>
+    if (!response.ok) {
+      throw new Error(data.error || "레시피를 가져오지 못했습니다.");
+    }
 
-  <div id="resultBox" style="display:none; margin-top: 18px; padding: 16px; background: #fff; border-radius: 10px; border: 1px solid #eee; white-space: pre-wrap; line-height: 1.6; font-size: 14px;"></div>
+    resultBox.textContent = data.recipe || data.text || "추천 결과가 없습니다.";
+    resultBox.style.display = "block";
 
-  <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee;">
-    <p style="margin:0; font-size: 12px; color: #aaa;">
-      · AI가 생성한 추천 레시피이며 실제 조리 시 재료 상태와 개인 입맛에 따라 조절해주세요.
-    </p>
-  </div>
-</div>
+  } catch (error) {
+    resultBox.textContent =
+      "레시피를 불러오는 중 문제가 발생했습니다.\n\n" +
+      error.message;
+    resultBox.style.display = "block";
 
-<script>
-// ▼▼▼ 여기에 프록시(서버리스 함수) 주소를 넣으세요. Gemini API 키는 절대 여기 넣지 마세요. ▼▼▼
-const PROXY_URL = "https://falling-heart-4c21.sweetrain0804.workers.dev";
+  } finally {
+    btn.disabled = false;
+    loading.style.display = "none";
+  }
+}
+</script>
 
-async function getRecipe() {
-  const ingredients = document.getElementById('ingredients').value.trim();
+</body>
+</html>
