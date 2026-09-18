@@ -4,13 +4,12 @@ export default {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
-    }; 
-    // 프리플라이트(OPTIONS) 요청 처리
+    };
+
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // POST 요청만 허용
     if (request.method !== "POST") {
       return new Response("Method not allowed", {
         status: 405,
@@ -31,7 +30,6 @@ export default {
         );
       }
 
-      // 환경변수에 등록된 Gemini API 키 사용
       const apiKey = env.GEMINI_API_KEY;
 
       if (!apiKey) {
@@ -78,7 +76,7 @@ export default {
         data?.candidates?.[0]?.content?.parts?.[0]?.text ??
         "응답을 생성하지 못했습니다.";
 
-      return new Response(JSON.stringify({ result: text }), {
+      return new Response(JSON.stringify({ text: text }), {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     } catch (err) {
