@@ -4,8 +4,7 @@ export default {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
-    };
-
+    }; 
     // 프리플라이트(OPTIONS) 요청 처리
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
