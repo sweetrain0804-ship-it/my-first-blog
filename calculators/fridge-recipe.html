@@ -1,95 +1,92 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>냉장고 재료로 레시피 추천받기</title>
-</head>
-<body style="margin:0;">
+export default {
+  async fetch(request, env, ctx) {
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
 
-<div style="max-width: 480px; margin: 0 auto; border: 1px solid #ddd; border-radius: 12px; padding: 20px; font-family: sans-serif; background: #fffaf5;">
-  <h3 style="text-align: center; color: #b5541e; margin-top: 0;">🥘 냉장고 파먹기 레시피 추천</h3>
-  <p style="font-size: 13px; color: #777; text-align: center; margin-top: -5px;">
-    남은 재료를 쉼표로 입력하면 AI가 만들 수 있는 요리를 추천해드려요
-  </p>
-
-  <div style="margin-bottom: 12px;">
-    <label style="display:block; font-size: 14px; margin-bottom: 4px;">가진 재료 (쉼표로 구분)</label>
-    <input type="text" id="ingredients" placeholder="예: 돼지고기, 김치, 두부"
-      style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-  </div>
-
-  <div style="margin-bottom: 15px;">
-    <label style="display:block; font-size: 14px; margin-bottom: 4px;">몇 인분 기준으로 알려드릴까요?</label>
-    <select id="servings" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; font-size: 14px;">
-      <option value="1인분">1인분</option>
-      <option value="2인분" selected>2인분</option>
-      <option value="3~4인분">3~4인분</option>
-    </select>
-  </div>
-
-  <button onclick="getRecipe()" id="askBtn"
-    style="width: 100%; padding: 13px; background: #b5541e; color: #fff; border: none; border-radius: 8px; font-size: 15px; cursor: pointer;">
-    레시피 추천받기
-  </button>
-
-  <div id="loading" style="display:none; text-align:center; margin-top: 15px; font-size: 14px; color: #999;">
-    재료를 살펴보는 중이에요...
-  </div>
-
-  <div id="resultBox" style="display:none; margin-top: 18px; padding: 16px; background: #fff; border-radius: 10px; border: 1px solid #eee; white-space: pre-wrap; line-height: 1.6; font-size: 14px;"></div>
-
-  <div style="margin-top: 20px; padding-top: 12px; border-top: 1px solid #eee;">
-    <p style="margin:0; font-size: 12px; color: #aaa;">
-      · AI가 생성한 추천 레시피이며 실제 조리 시 재료 상태와 개인 입맛에 따라 조절해주세요.
-    </p>
-  </div>
-</div>
-
-<script>
-const PROXY_URL = "https://falling-heart-4c21.sweetrain0804.workers.dev";
-
-async function getRecipe() {
-  const ingredients = document.getElementById('ingredients').value.trim();
-  const servings = document.getElementById('servings').value;
-  const resultBox = document.getElementById('resultBox');
-  const loading = document.getElementById('loading');
-  const askBtn = document.getElementById('askBtn');
-
-  if (!ingredients) {
-    alert('재료를 입력해주세요!');
-    return;
-  }
-
-  const prompt = `냉장고에 다음 재료가 있습니다: ${ingredients}. 기준 인원은 ${servings}입니다. 이 재료들을 활용해서 만들 수 있는 맛있는 요리 레시피 1~2가지를 추천해주세요. 요리 이름, 필요한 추가 양념, 상세 조리 순서를 보기 쉽게 정리해주세요.`;
-
-  askBtn.disabled = true;
-  loading.style.display = 'block';
-  resultBox.style.display = 'none';
-  resultBox.innerHTML = '';
-
-  try {
-    const response = await fetch(PROXY_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompt })
-    });
-
-    const data = await response.json();
-    
-    if (data.text) {
-      resultBox.innerHTML = data.text;
-    } else {
-      resultBox.innerHTML = '레시피를 가져오지 못했어요. 다시 시도해 주세요.';
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
     }
-  } catch (err) {
-    resultBox.innerHTML = '통신 중 오류가 발생했습니다: ' + err.message;
-  } finally {
-    loading.style.display = 'none';
-    askBtn.disabled = false;
-    resultBox.style.display = 'block';
-  }
-}
-</script>
 
-</body>
-</html>
+    if (request.method !== "POST") {
+      return new Response("Method not allowed", {
+        status: 405,
+        headers: corsHeaders,
+      });
+    }
+
+    try {
+      const { prompt } = await request.json();
+
+      if (!prompt) {
+        return new Response(
+          JSON.stringify({ error: "prompt가 없습니다." }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      const apiKey = env.GEMINI_API_KEY;
+
+      if (!apiKey) {
+        return new Response(
+          JSON.stringify({ error: "서버에 API 키가 설정되어 있지 않습니다." }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+      const geminiResponse = await fetch(geminiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+        }),
+      });
+
+      if (!geminiResponse.ok) {
+        const errorText = await geminiResponse.text();
+        return new Response(
+          JSON.stringify({
+            error: "Gemini API 호출 실패",
+            detail: errorText,
+          }),
+          {
+            status: geminiResponse.status,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+
+      const data = await geminiResponse.json();
+
+      const text =
+        data?.candidates?.[0]?.content?.parts?.[0]?.text ??
+        "응답을 생성하지 못했습니다.";
+
+      return new Response(JSON.stringify({ text: text }), {
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    } catch (err) {
+      return new Response(
+        JSON.stringify({ error: "서버 오류", detail: err.message }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+  },
+};
