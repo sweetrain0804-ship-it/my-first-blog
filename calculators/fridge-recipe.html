@@ -207,7 +207,6 @@
 </div>
 
 <script>
-  // Cloudflare Worker 엔드포인트 (Gemini API 프록시)
   const WORKER_URL = "https://falling-heart-4c21.sweetrain0804.workers.dev";
 
   const ingredientInput = document.getElementById("ingredientInput");
@@ -235,7 +234,6 @@
   function addIngredient() {
     const val = ingredientInput.value.trim();
     if (!val) return;
-    // 쉼표로 여러 개 한 번에 입력 가능
     val.split(",").map(v => v.trim()).filter(Boolean).forEach(v => {
       if (!ingredients.includes(v)) ingredients.push(v);
     });
@@ -298,7 +296,7 @@
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        throw new Error(data.error || "레시피 생성에 실패했어요");
+        throw new Error((data.error || "레시피 생성에 실패했어요") + " / " + (data.detail || ""));
       }
 
       resultBox.textContent = data.text || "추천 결과를 가져오지 못했어요. 다시 시도해주세요.";
