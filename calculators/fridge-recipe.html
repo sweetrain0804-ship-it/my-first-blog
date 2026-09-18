@@ -1,92 +1,319 @@
-export default {
-  async fetch(request, env, ctx) {
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    };
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>냉장고 파먹기 - AI 레시피 추천</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    background: #f6f7f9;
+    margin: 0;
+    padding: 20px;
+    color: #222;
+  }
+  .fridge-wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .fridge-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fridge-sub {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 18px;
+  }
+  .ingredient-input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  #ingredientInput {
+    flex: 1;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 15px;
+  }
+  #ingredientInput:focus {
+    outline: none;
+    border-color: #4a90d9;
+  }
+  #addBtn {
+    padding: 12px 16px;
+    background: #4a90d9;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  #addBtn:active { opacity: 0.8; }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 20px;
+    margin-bottom: 16px;
+  }
+  .tag {
+    background: #eef4fb;
+    color: #2c6cb0;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tag button {
+    background: none;
+    border: none;
+    color: #2c6cb0;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+  }
+  .options-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .option-chip {
+    padding: 8px 14px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+    color: #555;
+  }
+  .option-chip.selected {
+    background: #333;
+    color: #fff;
+    border-color: #333;
+  }
+  #submitBtn {
+    width: 100%;
+    padding: 14px;
+    background: #ff7a45;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  #submitBtn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  #submitBtn:active:not(:disabled) { opacity: 0.85; }
+  .hint {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  #resultBox {
+    margin-top: 18px;
+    padding: 16px;
+    background: #fafafa;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    font-size: 15px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    display: none;
+  }
+  #resultBox.show { display: block; }
+  .loading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    padding: 20px 0;
+    color: #777;
+    font-size: 14px;
+  }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #ddd;
+    border-top-color: #ff7a45;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-box {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: #fff3f0;
+    border: 1px solid #ffd9cc;
+    color: #c0392b;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+  .error-box.show { display: block; }
+</style>
+</head>
+<body>
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, { headers: corsHeaders });
+<div class="fridge-wrap">
+  <div class="fridge-title">🥦 냉장고 파먹기</div>
+  <div class="fridge-sub">남은 재료를 입력하면 AI가 레시피를 추천해드려요</div>
+
+  <div class="ingredient-input-row">
+    <input type="text" id="ingredientInput" placeholder="예: 계란, 대파, 두부" />
+    <button id="addBtn">추가</button>
+  </div>
+
+  <div class="tag-list" id="tagList"></div>
+
+  <div class="options-row" id="optionsRow">
+    <div class="option-chip" data-type="mood" data-value="간단하게">간단하게</div>
+    <div class="option-chip" data-type="mood" data-value="든든하게">든든하게</div>
+    <div class="option-chip" data-type="mood" data-value="매콤하게">매콤하게</div>
+    <div class="option-chip" data-type="mood" data-value="다이어트">다이어트식</div>
+  </div>
+
+  <button id="submitBtn">레시피 추천받기</button>
+  <div class="hint">재료를 1개 이상 추가한 뒤 눌러주세요</div>
+
+  <div class="loading" id="loadingBox" style="display:none;">
+    <div class="spinner"></div>
+    <span>AI가 냉장고를 살펴보는 중...</span>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div id="resultBox"></div>
+</div>
+
+<script>
+  // Cloudflare Worker 엔드포인트 (Gemini API 프록시)
+  const WORKER_URL = "https://falling-heart-4c21.sweetrain0804.workers.dev";
+
+  const ingredientInput = document.getElementById("ingredientInput");
+  const addBtn = document.getElementById("addBtn");
+  const tagList = document.getElementById("tagList");
+  const submitBtn = document.getElementById("submitBtn");
+  const resultBox = document.getElementById("resultBox");
+  const loadingBox = document.getElementById("loadingBox");
+  const errorBox = document.getElementById("errorBox");
+  const optionsRow = document.getElementById("optionsRow");
+
+  let ingredients = [];
+  let selectedMood = null;
+
+  function renderTags() {
+    tagList.innerHTML = "";
+    ingredients.forEach((ing, idx) => {
+      const tag = document.createElement("div");
+      tag.className = "tag";
+      tag.innerHTML = `<span>${ing}</span><button data-idx="${idx}">✕</button>`;
+      tagList.appendChild(tag);
+    });
+  }
+
+  function addIngredient() {
+    const val = ingredientInput.value.trim();
+    if (!val) return;
+    // 쉼표로 여러 개 한 번에 입력 가능
+    val.split(",").map(v => v.trim()).filter(Boolean).forEach(v => {
+      if (!ingredients.includes(v)) ingredients.push(v);
+    });
+    ingredientInput.value = "";
+    renderTags();
+  }
+
+  addBtn.addEventListener("click", addIngredient);
+  ingredientInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addIngredient();
+    }
+  });
+
+  tagList.addEventListener("click", (e) => {
+    if (e.target.tagName === "BUTTON") {
+      const idx = Number(e.target.dataset.idx);
+      ingredients.splice(idx, 1);
+      renderTags();
+    }
+  });
+
+  optionsRow.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("option-chip")) return;
+    const chip = e.target;
+    if (chip.classList.contains("selected")) {
+      chip.classList.remove("selected");
+      selectedMood = null;
+    } else {
+      [...optionsRow.children].forEach(c => c.classList.remove("selected"));
+      chip.classList.add("selected");
+      selectedMood = chip.dataset.value;
+    }
+  });
+
+  async function getRecipe() {
+    if (ingredients.length === 0) {
+      ingredientInput.focus();
+      return;
     }
 
-    if (request.method !== "POST") {
-      return new Response("Method not allowed", {
-        status: 405,
-        headers: corsHeaders,
-      });
-    }
+    resultBox.classList.remove("show");
+    errorBox.classList.remove("show");
+    loadingBox.style.display = "flex";
+    submitBtn.disabled = true;
+
+    const moodText = selectedMood ? `, 스타일은 "${selectedMood}"으로` : "";
+    const prompt = `다음 재료로 만들 수 있는 요리를 1~2가지 추천해줘${moodText}. 재료: ${ingredients.join(", ")}. 
+각 요리마다 요리 이름, 필요한 추가 재료(있다면), 간단한 조리 순서를 3~5단계로 알려줘. 
+너무 길지 않게, 한국어로, 친근한 말투로 답해줘.`;
 
     try {
-      const { prompt } = await request.json();
-
-      if (!prompt) {
-        return new Response(
-          JSON.stringify({ error: "prompt가 없습니다." }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      const apiKey = env.GEMINI_API_KEY;
-
-      if (!apiKey) {
-        return new Response(
-          JSON.stringify({ error: "서버에 API 키가 설정되어 있지 않습니다." }),
-          {
-            status: 500,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
-      }
-
-      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-      const geminiResponse = await fetch(geminiUrl, {
+      const res = await fetch(WORKER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [{ text: prompt }],
-            },
-          ],
-        }),
+        body: JSON.stringify({ prompt })
       });
 
-      if (!geminiResponse.ok) {
-        const errorText = await geminiResponse.text();
-        return new Response(
-          JSON.stringify({
-            error: "Gemini API 호출 실패",
-            detail: errorText,
-          }),
-          {
-            status: geminiResponse.status,
-            headers: { "Content-Type": "application/json", ...corsHeaders },
-          }
-        );
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "레시피 생성에 실패했어요");
       }
 
-      const data = await geminiResponse.json();
-
-      const text =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text ??
-        "응답을 생성하지 못했습니다.";
-
-      return new Response(JSON.stringify({ text: text }), {
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      });
+      resultBox.textContent = data.text || "추천 결과를 가져오지 못했어요. 다시 시도해주세요.";
+      resultBox.classList.add("show");
     } catch (err) {
-      return new Response(
-        JSON.stringify({ error: "서버 오류", detail: err.message }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+      errorBox.textContent = "⚠️ 오류가 발생했어요: " + err.message;
+      errorBox.classList.add("show");
+    } finally {
+      loadingBox.style.display = "none";
+      submitBtn.disabled = false;
     }
-  },
-};
+  }
+
+  submitBtn.addEventListener("click", getRecipe);
+</script>
+
+</body>
+</html>
