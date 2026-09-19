@@ -15,7 +15,7 @@ export default {
         status: 405,
         headers: corsHeaders,
       });
-    }
+    
 
     try {
       const { prompt } = await request.json();
