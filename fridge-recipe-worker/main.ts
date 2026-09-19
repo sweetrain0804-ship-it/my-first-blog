@@ -6,6 +6,8 @@ const ALLOWED_ORIGINS = [
 
 const MAX_PROMPT_LENGTH = 2000; // 프롬프트 최대 글자 수 (안내문 포함)
 const MAX_OUTPUT_TOKENS = 2048; // 답변 최대 길이
+const MAX_IMAGE_LENGTH = 1_500_000; // 사진 데이터 최대 글자 수 (약 1MB)
+const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
 const RATE_LIMIT = 10; // IP당 허용 횟수
 const RATE_WINDOW_MS = 60 * 60 * 1000; // 1시간
 
@@ -67,7 +69,7 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const { prompt } = await request.json();
+    const { prompt, image } = await request.json();
 
     if (!prompt || typeof prompt !== "string") {
       return new Response(
@@ -89,6 +91,31 @@ Deno.serve(async (request: Request) => {
       );
     }
 
+    // 사진은 선택 사항 (없으면 기존처럼 글만 처리)
+    if (image) {
+      if (
+        typeof image.data !== "string" ||
+        !ALLOWED_MIME.includes(image.mimeType)
+      ) {
+        return new Response(
+          JSON.stringify({ error: "지원하지 않는 사진 형식입니다." }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      if (image.data.length > MAX_IMAGE_LENGTH) {
+        return new Response(
+          JSON.stringify({ error: "사진 용량이 너무 큽니다. 더 작은 사진으로 시도해주세요." }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+    }
+
     const apiKey = Deno.env.get("GEMINI_API_KEY");
 
     if (!apiKey) {
@@ -101,17 +128,20 @@ Deno.serve(async (request: Request) => {
       );
     }
 
+    const parts: Array<Record<string, unknown>> = [{ text: prompt }];
+    if (image) {
+      parts.push({
+        inline_data: { mime_type: image.mimeType, data: image.data },
+      });
+    }
+
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
 
     const geminiResponse = await fetch(geminiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }],
-          },
-        ],
+        contents: [{ parts: parts }],
         generationConfig: {
           maxOutputTokens: MAX_OUTPUT_TOKENS,
         },
