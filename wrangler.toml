@@ -1,3 +1,3 @@
 name = "falling-heart-4c21"
-main = "fridge-recipe-worker/worker.js"
+main = "fridge-recipe-worker/main.ts"
 compatibility_date = "2026-09-01"
