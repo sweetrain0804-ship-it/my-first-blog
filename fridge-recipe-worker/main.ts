@@ -1,6 +1,7 @@
 // 요청을 허용할 사이트 주소 (맨 끝에 / 없이)
 const ALLOWED_ORIGINS = [
-  "https://wjdrbxo77.mycafe24.com",
+  "https://toolnote.kr",
+  "https://www.toolnote.kr",
   "https://sweetrain0804-ship-it.github.io", // GitHub Pages 테스트용, 필요 없으면 삭제
 ];
 
