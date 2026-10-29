@@ -11,7 +11,19 @@ const MAX_IMAGE_LENGTH = 1_500_000; // 사진 데이터 최대 글자 수 (약 1
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
 const RATE_LIMIT = 3; // IP당 허용 횟수
 const RATE_WINDOW_MS = 24 * 60 * 60 * 1000; // 1시간
-
+async function checkLimit(ip: string): Promise<boolean> {
+  try {
+    const kv = await Deno.openKv();
+    const day = new Date(Date.now() + 9 * 3600 * 1000).toISOString().slice(0, 10);
+    const key = ["rate", day, ip];
+    const cur = (await kv.get<number>(key)).value ?? 0;
+    if (cur >= RATE_LIMIT) return true;
+    await kv.set(key, cur + 1, { expireIn: RATE_WINDOW_MS });
+    return false;
+  } catch {
+    return false;
+  }
+}
 const hits = new Map<string, number[]>();
 
 function isRateLimited(ip: string): boolean {
@@ -57,7 +69,7 @@ Deno.serve(async (request: Request) => {
     request.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
     "unknown";
 
-  if (isRateLimited(ip)) {
+  if (await checkLimit(ip)) {
     return new Response(
       JSON.stringify({
         error: "오늘은 사용 횟수를 초과했어요. 내일 다시 시도해주세요.",
