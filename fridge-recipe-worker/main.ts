@@ -9,8 +9,8 @@ const MAX_PROMPT_LENGTH = 2000; // 프롬프트 최대 글자 수 (안내문 포
 const MAX_OUTPUT_TOKENS = 2048; // 답변 최대 길이
 const MAX_IMAGE_LENGTH = 1_500_000; // 사진 데이터 최대 글자 수 (약 1MB)
 const ALLOWED_MIME = ["image/jpeg", "image/png", "image/webp"];
-const RATE_LIMIT = 10; // IP당 허용 횟수
-const RATE_WINDOW_MS = 60 * 60 * 1000; // 1시간
+const RATE_LIMIT = 3; // IP당 허용 횟수
+const RATE_WINDOW_MS = 24 * 60 * 60 * 1000; // 1시간
 
 const hits = new Map<string, number[]>();
 
@@ -60,7 +60,7 @@ Deno.serve(async (request: Request) => {
   if (isRateLimited(ip)) {
     return new Response(
       JSON.stringify({
-        error: "오늘은 사용 횟수를 초과했어요. 잠시 후 다시 시도해주세요.",
+        error: "오늘은 사용 횟수를 초과했어요. 내일 다시 시도해주세요.",
       }),
       {
         status: 429,
